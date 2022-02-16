@@ -2,13 +2,12 @@ import React, { useState } from "react";
 import ProductList from "../components/ProductList";
 import CategoryMenu from "../components/CategoryMenu";
 
+// previously tasked with maintaining state - this has been moved to global state - makes this easier to maintain 
 const Home = () => {
-  const [currentCategory, setCategory] = useState("");
-
   return (
     <div className="container">
-      <CategoryMenu setCategory={setCategory} />
-      <ProductList currentCategory={currentCategory} />
+      <CategoryMenu />
+      <ProductList />
     </div>
   );
 };
