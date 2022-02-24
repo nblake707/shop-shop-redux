@@ -11,6 +11,8 @@ const StoreProvider = ({ value = [], ...props }) => {
     // state = most up-to-date version of global state &&  dispatch = method we execute to update state
     const [state, dispatch] = useProductReducer({ // instantiate initial global state
         products: [],
+        cart: [],
+        cartOpen: false,
         categories: [],
         currentCategory: '',
     });
