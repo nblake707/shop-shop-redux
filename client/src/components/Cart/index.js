@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import CartItem from "../CartItem";
 import Auth from "../../utils/auth";
 import { useStoreContext } from "../../utils/GlobalState";
-import { TOGGLE_CART } from "../../utils/actions";
+import { TOGGLE_CART, ADD_MULTIPLE_TO_CART } from "../../utils/actions";
+import { idbPromise } from "../../utils/helpers";
 import "./style.css";
 
 const Cart = () => {
@@ -11,6 +12,18 @@ const Cart = () => {
   const toggleCart = () => {
     dispatch({ type: TOGGLE_CART });
   };
+
+  // check if theres anything isn the state cart property on load
+  useEffect(() => {
+    async function getCart() {
+      const cart = await idbPromise('cart', 'get');
+      dispatch({ type: ADD_MULTIPLE_TO_CART, products: [...cart] });
+    };
+
+    if (!state.cart.length) {
+      getCart();
+    }
+  }, [state.cart.length, dispatch]);
 
   // add up the prices of everything saved in state.cart
   const calculateTotal = () => {
