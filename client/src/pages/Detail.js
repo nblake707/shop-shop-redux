@@ -4,6 +4,7 @@ import { useQuery } from "@apollo/client";
 import { useStoreContext } from "../utils/GlobalState";
 import { REMOVE_FROM_CART, UPDATE_CART_QUANTITY, ADD_TO_CART, UPDATE_PRODUCTS } from "../utils/actions";
 import { QUERY_PRODUCTS } from "../utils/queries";
+import { idbPromise } from '../utils/helpers';
 import spinner from "../assets/spinner.gif";
 import Cart from "../components/Cart";
 
@@ -17,6 +18,7 @@ function Detail() {
 
   const { products, cart } = state; // destructure products out of state
 
+  // anytime we update global state that update will also be reflected in IndexedDB
   const addToCart = () => {
     const itemInCart = cart.find((cartItem) => cartItem._id === id);
 
@@ -26,11 +28,19 @@ function Detail() {
         _id: id,
         purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1,
       });
+
+      // if updating quantity, use existing item data and increment purchaseQuantity value by one
+      idbPromise('cart', 'put', {
+        ...itemInCart,
+        purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
+      });
     } else {
       dispatch({
         type: ADD_TO_CART,
         product: { ...currentProduct, purchaseQuantity: 1 },
       });
+      //if product isn't in the cart yet, add it to the current shopping cart in IndexDB
+      idbPromise('cart', 'put', {...currentProduct, purchaseQuantity: 1});
     }
   };
 
@@ -39,20 +49,37 @@ function Detail() {
       type: REMOVE_FROM_CART,
       _id: currentProduct._id
     });
+    // upon removal from cart, delete the item from IndexedDB using the currentProduct._id to locate what to remove
+    idbPromise('cart', 'delete', {...currentProduct });
   };
 
   useEffect(() => {
+    // already in global store
     if (products.length) {
       // checks to see if there's data in our global states products array
       setCurrentProduct(products.find((product) => product._id === id)); // if so figure out which product is the right one
-    } else if (data) {
+    } // retrieved from server
+    else if (data) {
       // condition exists for when we don't have any products in the global state object or if it's the user's first time loading the app (opened link sent by another)
       dispatch({
         type: UPDATE_PRODUCTS,
-        products: data.productse,
+        products: data.products,
+      });
+
+      data.products.forEach((product) => {
+        idbPromise('products', 'put', product);
       });
     }
-  }, [products, data, dispatch, id]); // dependency array - hook's functionality is dependent on these to work
+    // get cache from idb
+    else if (!loading) {
+      idbPromise('products', 'get').then((indexedProducts) => {
+        dispatch({
+          type: UPDATE_PRODUCTS,
+          products: indexedProducts
+        });
+      });
+    }
+  }, [products, data, loading, dispatch, id]); // dependency array - hook's functionality is dependent on these to work
 
   return (
     <>
