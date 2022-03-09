@@ -12,7 +12,7 @@ const CartItem = ({ item }) => {
       type: REMOVE_FROM_CART,
       _id: item._id
     });
-    idbPromise('cart', 'delete', {...item }); // also removes from the global store
+    idbPromise('cart', 'delete', { ...item }); // also removes from the global store
   };
 
   const onChange = e => {
