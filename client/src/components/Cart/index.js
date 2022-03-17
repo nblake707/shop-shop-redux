@@ -5,14 +5,14 @@ import { useStoreContext } from "../../utils/GlobalState";
 import { TOGGLE_CART, ADD_MULTIPLE_TO_CART } from "../../utils/actions";
 import { idbPromise } from "../../utils/helpers";
 import { QUERY_CHECKOUT } from "../../utils/queries";
-import { useLazyQuery } from '@apollo/client';
+import { useLazyQuery } from "@apollo/client";
 import { loadStripe } from "@stripe/stripe-js";
 import "./style.css";
 
 const Cart = () => {
   const [state, dispatch] = useStoreContext();
   const stripePromise = loadStripe("pk_test_TYooMQauvdEDq54NiTphI7jx");
-  const [getCheckout, { data }] = useLazyQuery(QUERY_CHECKOUT);
+  const [getCheckout, { data }] = useLazyQuery(QUERY_CHECKOUT); // data contains response from graphql query
 
   const toggleCart = () => {
     dispatch({ type: TOGGLE_CART });
@@ -29,6 +29,14 @@ const Cart = () => {
       getCart();
     }
   }, [state.cart.length, dispatch]);
+
+  useEffect(() => {
+    if (data) {
+      stripePromise.then((res) => {
+        res.redirectToCheckout({ sessionId: data.checkout.session });
+      });
+    }
+  }, [data]);
 
   // add up the prices of everything saved in state.cart
   const calculateTotal = () => {
@@ -54,7 +62,7 @@ const Cart = () => {
     });
 
     getCheckout({
-      variables: { products: productIds }
+      variables: { products: productIds },
     });
   };
 
