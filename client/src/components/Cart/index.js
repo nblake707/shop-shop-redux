@@ -4,10 +4,15 @@ import Auth from "../../utils/auth";
 import { useStoreContext } from "../../utils/GlobalState";
 import { TOGGLE_CART, ADD_MULTIPLE_TO_CART } from "../../utils/actions";
 import { idbPromise } from "../../utils/helpers";
+import { QUERY_CHECKOUT } from "../../utils/queries";
+import { useLazyQuery } from "@apollo/client";
+import { loadStripe } from "@stripe/stripe-js";
 import "./style.css";
 
 const Cart = () => {
   const [state, dispatch] = useStoreContext();
+  const stripePromise = loadStripe("pk_test_TYooMQauvdEDq54NiTphI7jx");
+  const [getCheckout, { data }] = useLazyQuery(QUERY_CHECKOUT); // data contains response from graphql query
 
   const toggleCart = () => {
     dispatch({ type: TOGGLE_CART });
@@ -16,14 +21,22 @@ const Cart = () => {
   // check if theres anything isn the state cart property on load
   useEffect(() => {
     async function getCart() {
-      const cart = await idbPromise('cart', 'get');
+      const cart = await idbPromise("cart", "get");
       dispatch({ type: ADD_MULTIPLE_TO_CART, products: [...cart] });
-    };
+    }
 
     if (!state.cart.length) {
       getCart();
     }
   }, [state.cart.length, dispatch]);
+
+  useEffect(() => {
+    if (data) {
+      stripePromise.then((res) => {
+        res.redirectToCheckout({ sessionId: data.checkout.session });
+      });
+    }
+  }, [data]);
 
   // add up the prices of everything saved in state.cart
   const calculateTotal = () => {
@@ -32,6 +45,25 @@ const Cart = () => {
       sum += item.price * item.purchaseQuantity;
     });
     return sum.toFixed(2);
+  };
+
+  /* loop over items saved in state.cart and add their IDs to the new productIds
+    array. This needs to be passed into the Query_Checkout hook but we cant 
+    use useQuery since it is meant to run when a component is first rendered. 
+    To accomplish this must use useLazyQuery hook. 
+  */
+  const submitCheckout = () => {
+    const productIds = [];
+
+    state.cart.forEach((item) => {
+      for (let i = 0; i < item.purchaseQuantity; i++) {
+        productIds.push(item._id);
+      }
+    });
+
+    getCheckout({
+      variables: { products: productIds },
+    });
   };
 
   if (!state.cartOpen) {
@@ -59,7 +91,7 @@ const Cart = () => {
           <div className="flex-row space-between">
             <strong>Total: ${calculateTotal()}</strong>
             {Auth.loggedIn() ? (
-              <button>Checkout</button>
+              <button onClick={submitCheckout}>Checkout</button>
             ) : (
               <span>(log in to check out)</span>
             )}
