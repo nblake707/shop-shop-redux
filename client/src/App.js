@@ -7,7 +7,8 @@ import {
   createHttpLink,
 } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
-import { StoreProvider } from "./utils/GlobalState";
+// import { Provider } from "react-redux";
+// import store from './utils/store';
 
 import Home from "./pages/Home";
 import Detail from "./pages/Detail";
@@ -42,8 +43,6 @@ function App() {
     <ApolloProvider client={client}>
       <Router>
         <div>
-          {/* store provider wraps all components - all other components are children - hence need for ...props in provider defintion (GlobalState.js) */}
-          <StoreProvider> 
             <Nav />
             <Switch>
               <Route exact path="/" component={Home} />
@@ -54,7 +53,6 @@ function App() {
               <Route exact pat="/success" component={Success} />
               <Route component={NoMatch} />
             </Switch>
-          </StoreProvider>
         </div>
       </Router>
     </ApolloProvider>
