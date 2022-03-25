@@ -5,19 +5,21 @@ import { QUERY_CATEGORIES } from '../../utils/queries';
 import { idbPromise } from '../../utils/helpers';
 import { UPDATE_CATEGORIES, UPDATE_CURRENT_CATEGORY } from '../../utils/actions';
 import { useSelector, useDispatch } from 'react-redux';
+import { store } from '../../redux/store';
 
 
 // using this component immediately calls the useStoreContext hook to retrieve current state from global state
 function CategoryMenu() {
   const selectCategories = state => state.categories;
   const categories = useSelector(selectCategories);
+  
   const dispatch = useDispatch();
   // query category data, store it into the global state object 
   // const [state, dispatch] = useStoreContext();
   // const { categories } = state; // destructure categories array out of global state
   const { loading, data: categoryData } = useQuery(QUERY_CATEGORIES); // take this data and use it to set global state below
-
-console.log(categoryData);
+  // console.log(store.getState())
+  
   // above process (useQuery) is asynchronous so need useEffect hook  - runs immediately on load or when state changes in the component
   // takes 2 args - function to run given certain condition & the condition
   useEffect(() => {

@@ -6,11 +6,22 @@ import ProductItem from '../ProductItem';
 import { QUERY_PRODUCTS } from '../../utils/queries';
 import spinner from '../../assets/spinner.gif';
 import { idbPromise } from '../../utils/helpers';
+import { useDispatch, useSelector } from 'react-redux';
+
+const selectCurrentCategory = state => state.currentCategory;
+const selectProducts = state => state.products;
 
 function ProductList() {
-  const [state, dispatch] = useStoreContext();
-  const { currentCategory } = state;
+  // const [state, dispatch] = useStoreContext();
+  // const { currentCategory } = state;
+
+  const dispatch = useDispatch();
+  const currentCategory = useSelector(selectCurrentCategory);
+  const products = useSelector(selectProducts);
+
+console.log("Current Category: ", currentCategory);
   const { loading, data } = useQuery(QUERY_PRODUCTS);
+
 
   // if we are offline and we run the useQuery hook we'll never be in a state of loading data
   useEffect(() => {
@@ -41,15 +52,15 @@ function ProductList() {
 
   const filterProducts = () => {
     if(!currentCategory) {
-      return state.products;
+      return products;
     }
-    return state.products.filter(product => product.category._id === currentCategory);
+    return products.filter(product => product.category._id === currentCategory);
   }
 
   return (
     <div className="my-2">
       <h2>Our Products:</h2>
-      {state.products.length ? (
+      {products.length ? (
         <div className="flex-row">
           {filterProducts().map((product) => (
             <ProductItem
@@ -59,6 +70,7 @@ function ProductList() {
               name={product.name}
               price={product.price}
               quantity={product.quantity}
+              item={product}
             />
           ))}
         </div>

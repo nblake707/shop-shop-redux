@@ -1,114 +1,119 @@
-// import React, { useEffect } from "react";
-// import CartItem from "../CartItem";
-// import Auth from "../../utils/auth";
-// import { useStoreContext } from "../../utils/GlobalState";
-// import store from "../../utils/store";
-// import { TOGGLE_CART, ADD_MULTIPLE_TO_CART } from "../../utils/actions";
-// import { idbPromise } from "../../utils/helpers";
-// import { QUERY_CHECKOUT } from "../../utils/queries";
-// import { useLazyQuery } from "@apollo/client";
-// import { loadStripe } from "@stripe/stripe-js";
-// import "./style.css";
+import React, { useEffect } from "react";
+import CartItem from "../CartItem";
+import Auth from "../../utils/auth";
+import { TOGGLE_CART, ADD_MULTIPLE_TO_CART } from "../../utils/actions";
+import { idbPromise } from "../../utils/helpers";
+import { QUERY_CHECKOUT } from "../../utils/queries";
+import { useLazyQuery } from "@apollo/client";
+import { loadStripe } from "@stripe/stripe-js";
+import "./style.css";
+import { useSelector, useDispatch } from "react-redux";
 
-// const Cart = () => {
-//   // const [state, dispatch] = useStoreContext();
-  
-//   const stripePromise = loadStripe("pk_test_TYooMQauvdEDq54NiTphI7jx");
-//   const [getCheckout, { data }] = useLazyQuery(QUERY_CHECKOUT); // data contains response from graphql query
+const selectCart = (state) => state.cart;
+const selectCartOpen = (state) => state.cartOpen;
 
-//   const toggleCart = () => {
-//     store.dispatch({ type: TOGGLE_CART });
-//   };
+const Cart = () => {
+  // const [state, dispatch] = useStoreContext();
 
-//   // check if theres anything isn the state cart property on load
-//   useEffect(() => {
-//     async function getCart() {
-//       const cart = await idbPromise("cart", "get");
-//       store.dispatch({ type: ADD_MULTIPLE_TO_CART, products: [...cart] });
-//     }
+  const cart = useSelector(selectCart);
+  const cartOpen = useSelector(selectCartOpen);
+  const dispatch = useDispatch();
 
-//     if (!store.getState().cart.length) {
-//       getCart();
-//     }
-//   }, [store.state.cart.length, dispatch]);
+  const stripePromise = loadStripe("pk_test_TYooMQauvdEDq54NiTphI7jx");
+  const [getCheckout, { data }] = useLazyQuery(QUERY_CHECKOUT); // data contains response from graphql query
 
-//   useEffect(() => {
-//     if (data) {
-//       stripePromise.then((res) => {
-//         res.redirectToCheckout({ sessionId: data.checkout.session });
-//       });
-//     }
-//   }, [data]);
+  const toggleCart = () => {
+    dispatch({ type: TOGGLE_CART });
+  };
 
-//   // add up the prices of everything saved in state.cart
-//   const calculateTotal = () => {
-//     let sum = 0;
-//     state.cart.forEach((item) => {
-//       sum += item.price * item.purchaseQuantity;
-//     });
-//     return sum.toFixed(2);
-//   };
+  // check if theres anything isn the state cart property on load
+  useEffect(() => {
+    async function getCart() {
+      const cart = await idbPromise("cart", "get");
+      dispatch({ type: ADD_MULTIPLE_TO_CART, products: [...cart] });
+    }
 
-//   /* loop over items saved in state.cart and add their IDs to the new productIds
-//     array. This needs to be passed into the Query_Checkout hook but we cant 
-//     use useQuery since it is meant to run when a component is first rendered. 
-//     To accomplish this must use useLazyQuery hook. 
-//   */
-//   const submitCheckout = () => {
-//     const productIds = [];
+    if (!cart.length) {
+      getCart();
+    }
+  }, [cart.length, dispatch]);
 
-//     state.cart.forEach((item) => {
-//       for (let i = 0; i < item.purchaseQuantity; i++) {
-//         productIds.push(item._id);
-//       }
-//     });
+  useEffect(() => {
+    if (data) {
+      stripePromise.then((res) => {
+        res.redirectToCheckout({ sessionId: data.checkout.session });
+      });
+    }
+  }, [data]);
 
-//     getCheckout({
-//       variables: { products: productIds },
-//     });
-//   };
+  // add up the prices of everything saved in state.cart
+  const calculateTotal = () => {
+    let sum = 0;
+    cart.forEach((item) => {
+      sum += item.price * item.purchaseQuantity;
+    });
+    return sum.toFixed(2);
+  };
 
-//   if (!state.cartOpen) {
-//     return (
-//       <div className="cart-closed" onClick={toggleCart}>
-//         <span role="img" aria-label="trash">
-//           🛒
-//         </span>
-//       </div>
-//     );
-//   }
+  /* loop over items saved in state.cart and add their IDs to the new productIds
+    array. This needs to be passed into the Query_Checkout hook but we cant 
+    use useQuery since it is meant to run when a component is first rendered. 
+    To accomplish this must use useLazyQuery hook. 
+  */
+  const submitCheckout = () => {
+    const productIds = [];
 
-//   console.log(state);
-//   return (
-//     <div className="cart">
-//       <div className="close" onClick={toggleCart}>
-//         [close]
-//       </div>
-//       <h2>Shopping Cart</h2>
-//       {state.cart.length ? (
-//         <div>
-//           {state.cart.map((item) => (
-//             <CartItem key={item._id} item={item} />
-//           ))}
-//           <div className="flex-row space-between">
-//             <strong>Total: ${calculateTotal()}</strong>
-//             {Auth.loggedIn() ? (
-//               <button onClick={submitCheckout}>Checkout</button>
-//             ) : (
-//               <span>(log in to check out)</span>
-//             )}
-//           </div>
-//         </div>
-//       ) : (
-//         <h3>
-//           <span role="img" aria-label="shocked">
-//             😱
-//           </span>
-//           You haven't added anything to your cart yet!
-//         </h3>
-//       )}
-//     </div>
-//   );
-// };
+    cart.forEach((item) => {
+      for (let i = 0; i < item.purchaseQuantity; i++) {
+        productIds.push(item._id);
+      }
+    });
 
-// export default Cart;
+    getCheckout({
+      variables: { products: productIds },
+    });
+  };
+
+  if (!cartOpen) {
+    return (
+      <div className="cart-closed" onClick={toggleCart}>
+        <span role="img" aria-label="trash">
+          🛒
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="cart">
+      <div className="close" onClick={toggleCart}>
+        [close]
+      </div>
+      <h2>Shopping Cart</h2>
+      {cart.length ? (
+        <div>
+          {cart.map((item) => (
+            <CartItem key={item._id} item={item} />
+          ))}
+          <div className="flex-row space-between">
+            <strong>Total: ${calculateTotal()}</strong>
+            {Auth.loggedIn() ? (
+              <button onClick={submitCheckout}>Checkout</button>
+            ) : (
+              <span>(log in to check out)</span>
+            )}
+          </div>
+        </div>
+      ) : (
+        <h3>
+          <span role="img" aria-label="shocked">
+            😱
+          </span>
+          You haven't added anything to your cart yet!
+        </h3>
+      )}
+    </div>
+  );
+};
+
+export default Cart;
