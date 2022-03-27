@@ -28,6 +28,7 @@ export default function reducer (state = initialState, action) {
       return { // should this be state.products instead of action.products? 
         ...state, // return new object w/ copy of state argument
         products: [...action.products], // set products key to a value of a new array
+        
       };
     // if action type value matches, return new state object with updated categories array
     case UPDATE_CATEGORIES:

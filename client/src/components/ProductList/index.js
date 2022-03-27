@@ -1,25 +1,22 @@
 import React, { useEffect } from 'react';
 import { useQuery } from '@apollo/client';
-import { useStoreContext } from '../../utils/GlobalState';
-import { UPDATE_PRODUCTS } from '../../utils/actions';
+import { UPDATE_PRODUCTS } from '../../redux/actions';
 import ProductItem from '../ProductItem';
 import { QUERY_PRODUCTS } from '../../utils/queries';
 import spinner from '../../assets/spinner.gif';
 import { idbPromise } from '../../utils/helpers';
 import { useDispatch, useSelector } from 'react-redux';
-
-const selectCurrentCategory = state => state.currentCategory;
-const selectProducts = state => state.products;
+import { store } from '../../redux/store';
 
 function ProductList() {
-  // const [state, dispatch] = useStoreContext();
-  // const { currentCategory } = state;
+
+  const selectProducts = state => state.products;
 
   const dispatch = useDispatch();
-  const currentCategory = useSelector(selectCurrentCategory);
+  const currentCategory = useSelector((state) => state.currentCategory);
   const products = useSelector(selectProducts);
 
-console.log("Current Category: ", currentCategory);
+
   const { loading, data } = useQuery(QUERY_PRODUCTS);
 
 
@@ -28,11 +25,11 @@ console.log("Current Category: ", currentCategory);
     // if there's data to be stored
     if (data) {
       // store it in the flobal state object
-      dispatch({
+      store.dispatch({
         type: UPDATE_PRODUCTS, // let reducer function know that we want the update products action
         products: data.products // save the array of product data to our global store
       });
-
+      console.log("Current Category: ", data.products);
       // take each product and save it to IndexedDB using the helper function
       data.products.forEach((product) => {
         idbPromise('products', 'put', product);

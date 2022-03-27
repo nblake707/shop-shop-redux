@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import CartItem from "../CartItem";
 import Auth from "../../utils/auth";
-import { TOGGLE_CART, ADD_MULTIPLE_TO_CART } from "../../utils/actions";
+import { TOGGLE_CART, ADD_MULTIPLE_TO_CART } from "../../redux/actions";
 import { idbPromise } from "../../utils/helpers";
 import { QUERY_CHECKOUT } from "../../utils/queries";
 import { useLazyQuery } from "@apollo/client";
@@ -9,11 +9,9 @@ import { loadStripe } from "@stripe/stripe-js";
 import "./style.css";
 import { useSelector, useDispatch } from "react-redux";
 
-const selectCart = (state) => state.cart;
-const selectCartOpen = (state) => state.cartOpen;
-
 const Cart = () => {
-  // const [state, dispatch] = useStoreContext();
+  const selectCart = (state) => state.cart;
+  const selectCartOpen = (state) => state.cartOpen;
 
   const cart = useSelector(selectCart);
   const cartOpen = useSelector(selectCartOpen);
